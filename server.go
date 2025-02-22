@@ -1,43 +1,38 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/Arismonx/Golang-GraphQl/graph"
-	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/labstack/echo/v4"
 )
 
-const defaultPort = "8080"
-
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	e := echo.New()
+	server := handler.New(
+		graph.NewExecutableSchema(
+			graph.Config{
+				Resolvers: &graph.Resolver{},
+			},
+		),
+	)
 
-	srv.AddTransport(transport.Options{})
-	srv.AddTransport(transport.GET{})
-	srv.AddTransport(transport.POST{})
+	// Configure HTTP transport
+	server.AddTransport(transport.POST{})
+	server.AddTransport(transport.Options{})
+	server.AddTransport(transport.GET{})
 
-	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
-
-	srv.Use(extension.Introspection{})
-	srv.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New[string](100),
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello World!")
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	e.POST("/query", func(c echo.Context) error {
+		server.ServeHTTP(c.Response(), c.Request())
+		return nil
+	})
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	e.Logger.Fatal(e.Start(":8080"))
 }

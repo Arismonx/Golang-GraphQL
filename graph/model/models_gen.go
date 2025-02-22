@@ -2,25 +2,67 @@
 
 package model
 
-type Mutation struct {
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type Item struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type Player struct {
+	ID    string       `json:"id"`
+	Name  string       `json:"name"`
+	Level int32        `json:"level"`
+	Class *PlayerClass `json:"class,omitempty"`
+	Item  []*Item      `json:"item"`
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type PlayerClass string
+
+const (
+	PlayerClassWarrior PlayerClass = "WARRIOR"
+	PlayerClassMage    PlayerClass = "MAGE"
+	PlayerClassRogue   PlayerClass = "ROGUE"
+)
+
+var AllPlayerClass = []PlayerClass{
+	PlayerClassWarrior,
+	PlayerClassMage,
+	PlayerClassRogue,
 }
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+func (e PlayerClass) IsValid() bool {
+	switch e {
+	case PlayerClassWarrior, PlayerClassMage, PlayerClassRogue:
+		return true
+	}
+	return false
+}
+
+func (e PlayerClass) String() string {
+	return string(e)
+}
+
+func (e *PlayerClass) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PlayerClass(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PlayerClass", str)
+	}
+	return nil
+}
+
+func (e PlayerClass) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

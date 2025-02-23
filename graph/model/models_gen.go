@@ -13,10 +13,18 @@ type Item struct {
 	Name string `json:"name"`
 }
 
+type Mutation struct {
+}
+
+type NewPlayer struct {
+	Name  string      `json:"name"`
+	Class PlayerClass `json:"class"`
+}
+
 type Player struct {
 	ID    string       `json:"id"`
 	Name  string       `json:"name"`
-	Level int32        `json:"level"`
+	Leval int32        `json:"leval"`
 	Class *PlayerClass `json:"class,omitempty"`
 	Item  []*Item      `json:"item"`
 }

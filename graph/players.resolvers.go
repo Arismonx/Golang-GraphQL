@@ -11,12 +11,21 @@ import (
 	"github.com/Arismonx/Golang-GraphQl/graph/model"
 )
 
+// CreatePlayer is the resolver for the createPlayer field.
+func (r *mutationResolver) CreatePlayer(ctx context.Context, req model.NewPlayer) (*model.Player, error) {
+	return handlers.CreatePlayer(&req), nil
+}
+
 // GetPlayers is the resolver for the getPlayers field.
 func (r *queryResolver) GetPlayers(ctx context.Context) ([]*model.Player, error) {
 	return handlers.GetPlayers(), nil
 }
 
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
